@@ -103,12 +103,12 @@ The fifth decision is which relationships and distinctions the AI tool can read,
 
 So the five decisions can be covered by four principles, each addressing one dimension of the design boundary:
 
-| Boundary dimension | What the developer decides | Principle |
-| --- | --- | --- |
-| **Representation** | Which relationships and distinctions the AI tool can read, create, and preserve | Make consequential structure explicit. |
-| **Enforcement** | Which requested changes the AI tool prevents from taking effect | Put enforceable rules in the tool, not only in the prompt. |
-| **Control** | How much the AI tool carries out before returning | Keep already-determined work inside one call; return control when new judgment is needed. |
-| **Information** | Which operations and parameters the request interface exposes, and which facts the AI tool returns | Make each exchange decision-complete. |
+| Principle | Boundary dimension | What the developer decides | Principle |
+| --- | --- | --- | --- |
+| 1 | **Representation** | Which relationships and distinctions the AI tool can read, create, and preserve | Make consequential structure explicit. |
+| 2 | **Enforcement** | Which requested changes the AI tool prevents from taking effect | Put enforceable rules in the tool, not only in the prompt. |
+| 3 | **Control** | How much the AI tool carries out before returning | Keep already-determined work inside one call; return control when new judgment is needed. |
+| 4 | **Information** | Which operations and parameters the request interface exposes, and which facts the AI tool returns | Make each exchange decision-complete. |
 
 Representation determines which relationships and distinctions the AI tool can record in the artifact and which recorded structure can inform Enforcement, Control, and Information.
 <br>
@@ -434,8 +434,37 @@ The final subsection considers integrated designs whose benefits and costs need 
 Each study has one primary location. Where its findings bear on another claim, that connection is cross-referenced rather than presented as independent evidence. Conclusions remain limited to the mechanism, conditions, and outcomes the source supports; applying them to other tools or artifacts is a design inference.
 <br>
 
+### 9.1 Evidence for Safer
+The studies in this section examine efforts to reduce errors by helping a user or AI model select the intended target for a request, by blocking erroneous requests, or by doing both within the same interaction. 
 
+They cover required verification, clearer target distinctions, and runtime enforcement. They also examine restrictions that failed to reduce errors or obstructed appropriate work, showing why safety must be assessed through the consequences of an intervention.
 
+#### 9.1.1 Required Identity Re-entry Reduced Wrong-Patient Order Events
+In [Understanding and preventing wrong-patient electronic orders: a randomized controlled trial](https://pmc.ncbi.nlm.nih.gov/articles/PMC3638184/), Adelman and colleagues conducted a randomized trial involving 4,028 healthcare providers and 901,776 ordering sessions. Providers received either no additional verification, a dialog requiring single-click confirmation of patient identity, or a requirement to re-enter the patient’s initials, gender, and age correctly before proceeding.
+
+The outcome was a *retract-and-reorder* event: an order promptly withdrawn and placed by the same provider for a different patient. This served as a marker for wrong-patient orders. Compared with the control group, an ordering session was 16% less likely to contain such an event with single-click confirmation and 41% less likely with identity re-entry.
+
+This supports Safer by showing that required verification can reduce wrong-target errors. In this philosophy’s terms, **Information (*Principle 4*)** made the patient’s initials, gender, and age part of the required input; **Enforcement (*Principle 2*)** made their match with the selected record a condition of proceeding. The software checked that match. The provider still had to judge whether the selected record belonged to the intended patient.
+
+The trial studied human providers and a marker of near-miss errors, so it does not establish reduced patient harm or the same effect for AI models. Verification also imposed a cost: identity re-entry added an average of 6.6 seconds per ordering session.
+
+#### 9.1.2 More Distinctive Newborn Names Were Associated with Fewer Wrong-Patient Order Events
+In [Use of Temporary Names for Newborns and Associated Risks](https://pubmed.ncbi.nlm.nih.gov/26169429/), Adelman and colleagues studied a naming change in two neonatal intensive-care units within one health system. Temporary first names such as Babygirl were replaced with names incorporating the mother’s first name, such as Wendysgirl.
+
+The researchers compared one year before the change with one year afterward. The rate of *retract-and-reorder* (i.e. an order promptly withdrawn and placed by the same provider for a different patient) events fell from 59.5 to 37.9 per 100,000 orders—a 36.3% relative reduction.
+
+This supports Safer by linking clearer patient identifiers with fewer likely wrong-patient orders. In this philosophy’s terms, **Representation (*Principle 1*)** recorded a more distinctive name in the newborn’s record; **Information (*Principle 4*)** made that name available to providers selecting the patient record.
+
+The before-and-after design leaves other changes over time as possible explanations for the reduction. As in the previous study (Section 9.1.1), the measured events were a marker for wrong-patient orders rather than a measure of patient harm.
+
+#### 9.1.3 Runtime Enforcement Reduced Attack Success in a Controlled Test
+In [Runtime Policy Enforcement for MCP-Based LLM Agents](https://www.mdpi.com/2079-9292/15/13/2829), Wang, Zhu, and Li evaluated a software layer that checked an AI model’s tool requests before execution. Its rules covered file access outside a permitted workspace, sending sensitive data, and excessive tool use.
+
+In the controlled evaluation, 20 attack tasks were each run five times with an AI model (DeepSeek-v4-pro), producing 100 attack runs per configuration. Attack goals were achieved in 40% of runs without the runtime system and 5% with the runtime system. The AI model requested at least one high-risk tool call in 66% of attack runs with the runtime system, almost unchanged from the condition without it. This nearly unchanged request rate supports the authors’ explanation that the reduction in successful attacks came from blocking execution rather than the model avoiding risky requests.
+
+This supports Safer through **Enforcement (*Principle 2*)**: the software layer intercepted requests before execution even while the model continued to make them. The improvement did not depend on the model consistently deciding to avoid those requests.
+
+The controlled test mostly used simulated tools, and its tasks were designed alongside the enforcement rules. The findings support the interception mechanism in that controlled setting. They do not establish how reliably the system would protect production tools or handle independently designed attacks.
 <br>
 <br>
 <br>
