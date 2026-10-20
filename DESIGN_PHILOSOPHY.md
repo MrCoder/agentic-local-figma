@@ -425,19 +425,19 @@ Information does not prevent an erroneous request from taking effect. Enforcemen
 <br>
 
 ## 9. Evidence Across the Boundary
-The evidence in this section is organized around specific claims connecting design decisions to outcomes. Each entry identifies what was examined, which principles were involved, what the findings support, and what remains untested.
+This section examines empirical evidence connecting design decisions to outcomes. Each entry identifies what was tested, what was measured, which principles were involved, what the findings support, and what remains untested.
 
-The section begins with mechanisms and guarantees: arguments showing how a design produces an effect under stated assumptions, supported where appropriate by documented system behavior. The following three subsections examine empirical evidence for Safer, Cleaner, and Faster. A study involving several principles can support a measured benefit without establishing how much each principle contributed.
+The section begins with evidence for Safer, Cleaner, and Faster. A study involving several principles can support a measured benefit without establishing how much each principle contributed. Separate contributions are attributed only where the study tested them separately.
 
-The final subsection considers integrated designs whose benefits and costs need to be assessed together, along with studies that measure other outcomes. Higher task completion, fewer tokens, and fewer model turns can provide useful evidence, but none alone establishes fewer erroneous actions taking effect, a cleaner artifact, or less time to correct completion. Each result is described in terms of what was actually measured.
+The final subsection considers overall task performance and trade-offs between benefits. Higher task completion, fewer tokens, and fewer model turns can provide useful evidence, but none alone establishes fewer erroneous actions taking effect, a cleaner artifact, or less time to correct completion. Each result is described in terms of what was actually measured.
 
-Each study has one primary location. Where its findings bear on another claim, that connection is cross-referenced rather than presented as independent evidence. Conclusions remain limited to the mechanism, conditions, and outcomes the source supports; applying them to other tools or artifacts is a design inference.
+Each study is discussed in full where its findings are most relevant. Other sections refer back to that discussion when using the same findings to support another claim. Reusing a finding does not make it an additional, independent piece of evidence.
 <br>
 
 ### 9.1 Evidence for Safer
 The studies in this section examine efforts to reduce errors by helping a user or AI model select the intended target for a request, by blocking erroneous requests, or by doing both within the same interaction. 
 
-They cover required verification, clearer target distinctions, and runtime enforcement. They also examine restrictions that failed to reduce errors or obstructed appropriate work, showing why safety must be assessed through the consequences of an intervention.
+They cover required verification, clearer target distinctions, and runtime enforcement. They also examine a prescribing restriction that delayed appropriate treatment, showing why safety must be assessed through the consequences of an intervention.
 
 #### 9.1.1 Required Identity Re-entry Reduced Wrong-Patient Order Events
 In [Understanding and preventing wrong-patient electronic orders: a randomized controlled trial](https://pmc.ncbi.nlm.nih.gov/articles/PMC3638184/), Adelman and colleagues conducted a randomized trial involving 4,028 healthcare providers and 901,776 ordering sessions. Providers received either no additional verification, a dialog requiring single-click confirmation of patient identity, or a requirement to re-enter the patient’s initials, gender, and age correctly before proceeding.
@@ -451,7 +451,7 @@ The trial studied human providers and a marker of near-miss errors, so it does n
 #### 9.1.2 More Distinctive Newborn Names Were Associated with Fewer Wrong-Patient Order Events
 In [Use of Temporary Names for Newborns and Associated Risks](https://pubmed.ncbi.nlm.nih.gov/26169429/), Adelman and colleagues studied a naming change in two neonatal intensive-care units within one health system. Temporary first names such as Babygirl were replaced with names incorporating the mother’s first name, such as Wendysgirl.
 
-The researchers compared one year before the change with one year afterward. The rate of *retract-and-reorder* (i.e. an order promptly withdrawn and placed by the same provider for a different patient) events fell from 59.5 to 37.9 per 100,000 orders—a 36.3% relative reduction.
+The researchers compared one year before the change with one year afterward. The rate of *retract-and-reorder* events fell from 59.5 to 37.9 per 100,000 orders—a 36.3% relative reduction.
 
 This supports Safer by linking clearer patient identifiers with fewer likely wrong-patient orders. In this philosophy’s terms, **Representation (*Principle 1*)** recorded a more distinctive name in the newborn’s record; **Information (*Principle 4*)** made that name available to providers selecting the patient record.
 
@@ -460,11 +460,20 @@ The before-and-after design leaves other changes over time as possible explanati
 #### 9.1.3 Runtime Enforcement Reduced Attack Success in a Controlled Test
 In [Runtime Policy Enforcement for MCP-Based LLM Agents](https://www.mdpi.com/2079-9292/15/13/2829), Wang, Zhu, and Li evaluated a software layer that checked an AI model’s tool requests before execution. Its rules covered file access outside a permitted workspace, sending sensitive data, and excessive tool use.
 
-In the controlled evaluation, 20 attack tasks were each run five times with an AI model (DeepSeek-v4-pro), producing 100 attack runs per configuration. Attack goals were achieved in 40% of runs without the runtime system and 5% with the runtime system. The AI model requested at least one high-risk tool call in 66% of attack runs with the runtime system, almost unchanged from the condition without it. This nearly unchanged request rate supports the authors’ explanation that the reduction in successful attacks came from blocking execution rather than the model avoiding risky requests.
+In the controlled evaluation, 20 attack tasks were each run five times with an AI model (DeepSeek-v4-pro), producing 100 attack runs per configuration. Attack goals were achieved in 40% of runs without the runtime system and 5% with the runtime system. 
 
-This supports Safer through **Enforcement (*Principle 2*)**: the software layer intercepted requests before execution even while the model continued to make them. The improvement did not depend on the model consistently deciding to avoid those requests.
+The AI model requested at least one high-risk tool call in 66% of attack runs with the runtime system, almost unchanged from the condition without it. This nearly unchanged request rate supports the authors’ explanation that the reduction in successful attacks came from blocking execution rather than the model avoiding risky requests. This supports Safer through **Enforcement (*Principle 2*)**: execution checks reduced successful attacks without relying on the model to avoid those requests.
 
 The controlled test mostly used simulated tools, and its tasks were designed alongside the enforcement rules. The findings support the interception mechanism in that controlled setting. They do not establish how reliably the system would protect production tools or handle independently designed attacks.
+
+#### 9.1.4 A Nearly Hard-Stop Alert Delayed Appropriate Treatment
+In [Unintended Effects of a Computerized Physician Order Entry Nearly Hard-Stop Alert to Prevent a Drug Interaction](https://pubmed.ncbi.nlm.nih.gov/20876410/), Strom and colleagues evaluated an electronic prescribing restriction in a randomized trial at two hospitals. The restriction targeted concurrent prescriptions for warfarin and the antibiotic trimethoprim-sulfamethoxazole because their combined use can increase bleeding risk. It generally blocked those concurrent prescriptions, although clinicians could bypass it through limited exceptions or by contacting a pharmacist.
+
+Within 10 minutes of the initial prescribing attempt, the electronic ordering system accepted a concurrent prescription in 42.8% of episodes with the blocking alert and 86.5% under usual pharmacist warnings without a blocking alert. The restriction therefore reduced how often concurrent prescriptions were accepted through the electronic system. These figures alone do not establish whether the prescriptions prevented were clinically inappropriate or whether patient safety improved.
+
+The institutional review board stopped the trial early after four clinically important delays in appropriate treatment occurred. The study reported that two delays were definitely related to the intervention and two were probably related. A review of the four patients’ electronic records identified no infectious or thrombotic complications attributable to those delays.
+
+This provides limiting evidence for Safer under **Enforcement (*Principle 2*)**. The system could mechanically detect the drug combination, but restricting it could obstruct appropriate care despite the available exceptions. Changing prescribing in the intended direction therefore did not, by itself, establish improved safety. Evaluation must also examine whether the restriction and its override process prevent necessary work from proceeding.
 <br>
 <br>
 <br>
