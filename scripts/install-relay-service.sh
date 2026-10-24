@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # Install the figma-edit-mcp WebSocket relay as a macOS launchd user agent:
 # starts at login, restarts on exit, logs to ~/Library/Logs/<label>.log.
 #
@@ -95,13 +95,23 @@ plutil -lint "$PLIST" >/dev/null || die "generated plist is invalid: $PLIST"
 
 # Replace any existing instance with this label, then load the new plist.
 launchctl bootout "$DOMAIN/$LABEL" 2>/dev/null || true
-launchctl bootstrap "$DOMAIN" "$PLIST"
+if ! launchctl bootstrap "$DOMAIN" "$PLIST"; then
+  rm -f "$PLIST"
+  die "could not load relay service '$LABEL'"
+fi
+
+cleanup_failed_install() {
+  launchctl bootout "$DOMAIN/$LABEL" 2>/dev/null || true
+  rm -f "$PLIST"
+}
 
 for _ in $(seq 1 20); do
-  if curl -s -o /dev/null "http://localhost:$PORT"; then
+  PID="$(service_pid || true)"
+  if [ -n "$PID" ] && listener_pids | grep -qx "$PID" &&
+     curl -s --connect-timeout 1 --max-time 1 -o /dev/null "http://localhost:$PORT"; then
     echo "Relay '$LABEL' is running."
     echo "  port:   $PORT  (ws://localhost:$PORT)"
-    echo "  pid:    $(service_pid || echo '?')"
+    echo "  pid:    $PID"
     echo "  node:   $NODE"
     echo "  socket: $SOCKET"
     echo "  plist:  $PLIST"
@@ -112,6 +122,7 @@ for _ in $(seq 1 20); do
   sleep 0.5
 done
 
-echo "error: relay did not answer on http://localhost:$PORT within 10 s. Check the log:" >&2
+echo "error: relay did not answer on http://localhost:$PORT after 20 checks. Check the log:" >&2
 tail -n 20 "$LOG" >&2 || true
+cleanup_failed_install
 exit 1

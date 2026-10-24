@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # Remove the figma-edit-mcp relay launchd user agent installed by
 # install-relay-service.sh: stops the service and deletes its plist.
 # The log file in ~/Library/Logs is left in place.
