@@ -200,6 +200,9 @@ export type FigmaCommand =
 let ws: any = null;
 let wsUrl: string = 'ws://localhost:3055'; // Default
 let defaultPort: number = 3055;
+// The relay URL of the most recent connection attempt, so errors name the URL
+// actually tried (server.ts passes a CLI port to connectToFigma).
+let lastRelayUrl: string | undefined;
 let nextBindingGeneration = 0;
 
 type ChannelBindingState =
@@ -261,6 +264,19 @@ export function setFigmaServerUrl(url: string) {
     wsUrl = url;
 }
 
+/**
+ * The relay URL a connection attempt targets. On a localhost default the port
+ * is appended (server.ts passes it separately); any other URL is used as is.
+ */
+function resolveRelayUrl(port: number = defaultPort): string {
+    if (wsUrl.startsWith('ws://localhost') || wsUrl.startsWith('ws://127.0.0.1')) {
+        // Check if it already has port
+        const hasPort = wsUrl.split(':').length > 2;
+        if (!hasPort) return `${wsUrl}:${port}`;
+    }
+    return wsUrl;
+}
+
 export function connectToFigma(port: number = defaultPort) {
     // If already connected, do nothing
     if (ws && ws.readyState === WS_OPEN) {
@@ -268,18 +284,8 @@ export function connectToFigma(port: number = defaultPort) {
         return;
     }
 
-    // If port is passed, and we are on localhost default, append it.
-    // The logic in server.ts: const wsUrl = serverUrl === 'localhost' ? `${WS_URL}:${port}` : WS_URL;
-    // Here wsUrl should already be constructed properly or we construct it.
-    // To match server.ts logic exactly:
-    let finalUrl = wsUrl;
-    if (wsUrl.startsWith('ws://localhost') || wsUrl.startsWith('ws://127.0.0.1')) {
-        // Check if it already has port
-        const hasPort = wsUrl.split(':').length > 2;
-        if (!hasPort) {
-            finalUrl = `${wsUrl}:${port}`;
-        }
-    }
+    const finalUrl = resolveRelayUrl(port);
+    lastRelayUrl = finalUrl;
 
     logger.info(`Connecting to Figma socket server at ${finalUrl}...`);
     ws = new WSImpl(finalUrl);
@@ -565,7 +571,7 @@ export async function resetChannel(
 
 export async function joinChannel(channelName: string): Promise<JoinChannelResult> {
     if (!ws || ws.readyState !== WS_OPEN) {
-        throw new Error("Not connected to Figma");
+        throw new FigmaError(CLIENT_REFUSALS.RELAY_UNREACHABLE(lastRelayUrl ?? resolveRelayUrl()));
     }
 
     let socketAdmittedJoin = false;
@@ -733,7 +739,7 @@ export function sendCommandToFigma(
         // If not connected, try to connect first
         if (!ws || ws.readyState !== WS_OPEN) {
             connectToFigma();
-            reject(new Error("Not connected to Figma. Attempting to connect..."));
+            reject(new FigmaError(CLIENT_REFUSALS.RELAY_UNREACHABLE(lastRelayUrl ?? resolveRelayUrl())));
             return;
         }
 
