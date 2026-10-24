@@ -43,9 +43,15 @@ export const SOCKET_OPERATIONAL_CODES = [
  * release a working binding, so "no binding" only ever meant "never joined".
  * Leaving it on the `UNKNOWN_ERROR` fallback would have denied it the playbook
  * entry D9 requires for a state an agent must recover from.
+ *
+ * `RELAY_UNREACHABLE` is the other pre-wire state: no WebSocket to the relay is
+ * open (nothing listens on the relay port), so no frame can be sent at all.
+ * It replaces a bare `Error("Not connected to Figma")` that gave the caller
+ * neither the URL tried nor how to start the relay.
  */
 export const CLIENT_OPERATIONAL_CODES = [
     "CHANNEL_NOT_BOUND",
+    "RELAY_UNREACHABLE",
 ] as const;
 
 /**
@@ -79,7 +85,8 @@ export const PLUGIN_OPERATIONAL_CODES = [
  * `CHANNEL_NOT_BOUND` took the inventory from ten to eleven, Change 8's
  * `PAGE_SCAN_FAILED` / `VARIABLE_IN_USE` took it from eleven to thirteen, and
  * Rev 73 brought it to twelve by removing the Phase 11 connector surface with
- * its dedicated refusal.
+ * its dedicated refusal. `RELAY_UNREACHABLE` (client-origin) then took it
+ * back to thirteen.
  */
 export const OPERATIONAL_CODES = [
     ...SOCKET_OPERATIONAL_CODES,
@@ -135,7 +142,7 @@ export const JOIN_CODES = [
     "PLUGIN_DISCONNECTED",
 ] as const;
 
-/** The full ratified v2.3.3 inventory: twenty-two codes plus the fallback. */
+/** The full ratified v2.3.3 inventory: twenty-three codes plus the fallback. */
 export const RATIFIED_CODES = [
     ...OPERATIONAL_CODES,
     ...VERIFICATION_CODES,

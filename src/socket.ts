@@ -5,6 +5,7 @@ import { resolve } from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import { WebSocketServer, WebSocket } from "ws";
 import { parseCliArgs } from "./cli.js";
+import { SERVER_VERSION } from "./shared/version.js";
 import {
   acknowledgedResultFrame,
   CHANNEL_REFUSALS,
@@ -797,6 +798,9 @@ if (isSocketCliEntry()) {
   const { port, host } = parseCliArgs("figma-edit-mcp-socket");
   const server = createFigmaSocketServer();
   server.httpServer.listen(port, host, () => {
-    console.log(`WebSocket server running on ${host}:${port}`);
+    // One line that makes ownership visible: which build, which process, since when.
+    console.log(
+      `WebSocket server running on ${host}:${port} (figma-edit-mcp-socket v${SERVER_VERSION}, pid ${process.pid}, started ${new Date().toISOString()})`,
+    );
   });
 }

@@ -87,10 +87,28 @@ The config file location depends on your host — see [Integration-Specific Setu
 
 ### 2. Start the WebSocket bridge
 
-In a terminal, start the bridge that connects the MCP server to the Figma plugin. Keep this terminal running:
+The bridge (relay) connects the MCP server to the Figma plugin. Many agent sessions can share one relay, so run it as a service rather than in a terminal.
+
+**macOS** (from a clone of this repo, after `bun run build`): install an always-on launchd user agent that starts at login and restarts if it exits.
 
 ```bash
-npx -y --package figma-edit-mcp figma-edit-mcp-socket
+scripts/install-relay-service.sh      # remove with scripts/uninstall-relay-service.sh
+```
+
+Options: `--port <n>` (default 3055), `--label <name>`, `--socket <path-to-dist/socket.js>`. Log: `~/Library/Logs/com.agentic-local-figma.relay.log`.
+
+**Other systems**: run `npx -y --package figma-edit-mcp figma-edit-mcp-socket`. On Linux, keep it running with a `systemd --user` unit, for example `~/.config/systemd/user/figma-edit-relay.service`, then `systemctl --user enable --now figma-edit-relay`:
+
+```ini
+[Unit]
+Description=figma-edit-mcp relay
+
+[Service]
+ExecStart=/usr/bin/env npx -y --package figma-edit-mcp figma-edit-mcp-socket
+Restart=always
+
+[Install]
+WantedBy=default.target
 ```
 
 ### 3. Install the Figma plugin
@@ -190,7 +208,7 @@ Then point the Figma plugin's WebSocket address at your WSL instance's IP.
 
 ## Usage
 
-1. Start the WebSocket bridge: `npx -y --package figma-edit-mcp figma-edit-mcp-socket`
+1. Make sure the WebSocket bridge is running (see [step 2](#2-start-the-websocket-bridge))
 2. Configure the MCP server in your AI assistant (see [Integration-Specific Setup](#integration-specific-setup))
 3. Open Figma and launch the Figma Edit MCP plugin from Plugins → Development
 4. Use the `channel_join` MCP tool to establish communication

@@ -201,6 +201,15 @@ export const CLIENT_REFUSALS = {
       : "No channel is bound to this session. Call channel_join with the channel code shown in the Figma plugin's status bar before sending commands.",
     ...(releasedChannel === undefined ? {} : { details: { releasedChannel } }),
   }),
+  /**
+   * No WebSocket to the relay is open. The message must keep the
+   * "Not connected to Figma" prefix: the live verifiers match on it.
+   */
+  RELAY_UNREACHABLE: (relayUrl: string): ChannelProtocolError => ({
+    code: "RELAY_UNREACHABLE",
+    message: `Not connected to Figma: the relay at ${relayUrl} is not reachable. Start it with 'npx -y --package figma-edit-mcp figma-edit-mcp-socket' (on macOS, run scripts/install-relay-service.sh for an always-on service), then retry; the client reconnects automatically.`,
+    details: { relayUrl },
+  }),
 } as const;
 
 /**
